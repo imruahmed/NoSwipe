@@ -1,116 +1,181 @@
 package io.github.imruahmed.noswipe;
 
-import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
+import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
-import android.os.RemoteException;
+import android.provider.MediaStore;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+public class MainActivity extends AppCompatActivity {
 
-public class MainActivity extends Activity {
-    private final String LOGTAG = getClass().getName();
-    private final int REQUEST_IMAGE = 33;
-    private ProgressDialog progressDialog;
-    private File file = null;
-    private ImageView imagePreview;
-    private Context mContext;
+    private final String[] columns = { MediaStore.Images.Media.DATA, MediaStore.Images.Media._ID };
+    private final String orderBy = MediaStore.Images.Media._ID;
 
-    /**
-     * Usual onCreate - nothing special there
-     */
+    private int count;
+    private Bitmap[] thumbnails;
+    private boolean[] thumbnailsSelection;
+    private String[] arrPath;
+    private ImageAdapter imageAdapter;
+
+    /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mContext=this;
-        setContentView(R.layout.grid_item);
-        imagePreview = (ImageView) findViewById(R.id.imagePreview);
-    }
+        setContentView(R.layout.activity_main);
 
-    /**
-     * Button handler. Also very common one. Just create Intent and run it.
-     */
-    public void handleFromGallery(View _view) {
-        Intent i = new Intent(Intent.ACTION_PICK,
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(i, REQUEST_IMAGE);
-    }
+        Cursor imageCursor = managedQuery(MediaStore.Images.Media.INTERNAL_CONTENT_URI,
+                columns, null, null, orderBy);
 
-    /**
-     * Get result from gallery. Well we extract URI from intent and run
-     * ImageDisplayer
-     */
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent _intent) {
-        if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_IMAGE) {
-            ImageDisplayer displayer = new ImageDisplayer();
-            if(_intent.getData()!=null){
-                displayer.execute(_intent.getData());
-            }
+        int imageColumnIndex = imageCursor.getColumnIndex(MediaStore.Images.Media._ID);
+
+        this.count = imageCursor.getCount();
+        this.thumbnails = new Bitmap[this.count];
+        this.arrPath = new String[this.count];
+        this.thumbnailsSelection = new boolean[this.count];
+
+        for (int i = 0; i < this.count; i++) {
+            imageCursor.moveToPosition(i);
+
+            int id = imageCursor.getInt(imageColumnIndex);
+            int dataColumnIndex = imageCursor.getColumnIndex(MediaStore.Images.Media.DATA);
+
+            thumbnails[i] = MediaStore.Images.Thumbnails.getThumbnail(
+                    getApplicationContext().getContentResolver(), id,
+                    MediaStore.Images.Thumbnails.MICRO_KIND, null);
+
+            arrPath[i]= imageCursor.getString(dataColumnIndex);
         }
-    }
+        GridView imageGrid = (GridView) findViewById(R.id.image_grid);
 
-    /**
-     * This is it. here we can see, how to process Uri from gallery result
-     * in a proper way to get image displayed.
-     *
-     */
-    private class ImageDisplayer extends AsyncTask<Uri, Drawable,Drawable> {
-        @Override
-        protected void onPreExecute(){
-            progressDialog = ProgressDialog.show(mContext, "Loading", "");
-        }
-        @Override
-        protected Drawable doInBackground(Uri... _path) {
-            file = null;
-            // This is the key line. Content provider client gives us access to
-            // file no matter if it is a local or a remote one
-            ContentProviderClient client = getContentResolver()
-                    .acquireContentProviderClient(_path[0]);
-            try {
-                // Here we save copy of the file to temporary
-                ParcelFileDescriptor descriptor = client.openFile(_path[0], "r");
-                ParcelFileDescriptor.AutoCloseInputStream is = new ParcelFileDescriptor.AutoCloseInputStream(descriptor);
-                file = File.createTempFile("image", ".jpg", getDir(null, MODE_PRIVATE));
-                OutputStream outS = new FileOutputStream(file);
-                byte[] buf = new byte[1024];
-                int len = 0;
-                while ((len = is.read(buf)) > 0) {
-                    outS.write(buf, 0, len);
+        imageAdapter = new ImageAdapter();
+        imageGrid.setAdapter(imageAdapter);
+
+        imageCursor.close();
+
+        Button selectBtn = (Button) findViewById(R.id.select_button);
+        selectBtn.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                int len = thumbnailsSelection.length;
+                int cnt = 0;
+                String selectImages = "";
+
+                for (int i =0; i<len; i++) {
+                    if (thumbnailsSelection[i]){
+                        cnt++;
+                        selectImages = selectImages + arrPath[i] + "|";
+                    }
                 }
-                is.close();
-                outS.close();
-            } catch (RemoteException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (FileNotFoundException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+
+                if (cnt == 0) {
+                    Toast.makeText(getApplicationContext(),
+                            "Select an image", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),
+                            "Image(s) selected: " + cnt, Toast.LENGTH_SHORT).show();
+
+                    Log.v("SelectedImages", selectImages);
+                }
             }
-            // And finally, we display the image
-            String filePath = file.getAbsolutePath();
-            return Drawable.createFromPath(filePath);
+        });
+    }
+
+    public class ImageAdapter extends BaseAdapter {
+
+        private LayoutInflater layoutInflater;
+
+        class ViewHolder {
+            ImageView imageView;
+            CheckBox checkBox;
+            int imageId;
         }
 
-        @Override
-        protected void onPostExecute(Drawable _drawable) {
-            imagePreview.setImageDrawable(_drawable);
-            progressDialog.dismiss();
+        public ImageAdapter() {
+            layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            ViewHolder viewHolder;
+
+            if (convertView == null) {
+
+                viewHolder = new ViewHolder();
+                convertView = layoutInflater.inflate(R.layout.grid_item, null);
+                viewHolder.imageView = (ImageView) convertView.findViewById(R.id.thumbImage);
+                viewHolder.checkBox = (CheckBox) convertView.findViewById(R.id.itemCheckBox);
+
+                convertView.setTag(viewHolder);
+            }
+            else {
+                viewHolder = (ViewHolder) convertView.getTag();
+            }
+
+            viewHolder.checkBox.setId(position);
+            viewHolder.imageView.setId(position);
+
+            viewHolder.checkBox.setOnClickListener(new View.OnClickListener() {
+
+                public void onClick(View v) {
+                    // TODO Auto-generated method stub
+                    CheckBox cb = (CheckBox) v;
+                    int id = cb.getId();
+
+                    if (thumbnailsSelection[id]) {
+                        cb.setChecked(false);
+                        thumbnailsSelection[id] = false;
+                    } else {
+                        cb.setChecked(true);
+                        thumbnailsSelection[id] = true;
+                    }
+                }
+            });
+
+            viewHolder.imageView.setOnClickListener(new View.OnClickListener() {
+
+                public void onClick(View v) {
+                    // TODO Auto-generated method stub
+                    int id = v.getId();
+
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.parse("file://" + arrPath[id]), "image/*");
+                    startActivity(intent);
+                }
+            });
+
+            viewHolder.imageView.setImageBitmap(thumbnails[position]);
+            viewHolder.checkBox.setChecked(thumbnailsSelection[position]);
+            viewHolder.imageId = position;
+
+            return convertView;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public Object getItem(int position) {
+            return position;
+        }
+
+        public long getItemId(int position) {
+            return position;
         }
     }
 }
