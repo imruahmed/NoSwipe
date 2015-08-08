@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/previewFrame"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/thumbImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true" />
+        android:id="@+id/imagePreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="Image to share" >
+    </ImageView>
 
-    <CheckBox
-        android:id="@+id/itemCheckBox"
+    <Button
+        android:id="@+id/bFromGallery"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true" />
-</RelativeLayout>
+        android:layout_gravity="left"
+        android:onClick="handleFromGallery"
+        android:text="Select image from gallery" />
+
+</FrameLayout>
