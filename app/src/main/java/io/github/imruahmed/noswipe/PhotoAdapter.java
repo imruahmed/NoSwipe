@@ -57,7 +57,7 @@ public class PhotoAdapter extends ArrayAdapter<PhotoItem>{
         View view = inflater.inflate(R.layout.photo_item, parent, false);
 
         ImageView imageView = (ImageView) view.findViewById(R.id.imageView);
-        imageView.setImageResource(R.drawable.windows);
+        imageView.setImageURI(photoItem.getThumbnailUri());
 
         return view;
     }
