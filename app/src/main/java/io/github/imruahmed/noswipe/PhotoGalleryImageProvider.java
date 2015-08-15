@@ -10,17 +10,37 @@ import android.os.Environment;
 import android.provider.MediaStore;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.net.URL;
+import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * This is a helper utility which automatically fetches paths to full size and thumbnail sized gallery images.
- *
- * Created by Rex St. John (on behalf of AirPair.com) on 3/4/14.
- */
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.json.JsonFactory;
+import com.google.gdata.client.photos.PicasawebService;
+import com.google.gdata.data.photos.AlbumEntry;
+import com.google.gdata.data.photos.AlbumFeed;
+import com.google.gdata.data.photos.GphotoEntry;
+import com.google.gdata.data.photos.GphotoFeed;
+import com.google.gdata.data.photos.PhotoEntry;
+import com.google.gdata.data.photos.UserFeed;
+import com.google.gdata.util.AuthenticationException;
+import com.google.gdata.util.ServiceException;
+import com.google.gdata.util.ServiceForbiddenException;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+
 public class PhotoGalleryImageProvider {
 
-    // Consts
     public static final int IMAGE_RESOLUTION = 15;
 
     // Buckets where we are fetching images from.
@@ -34,8 +54,7 @@ public class PhotoGalleryImageProvider {
      * Fetch both full sized images and thumbnails via a single query.
      * Returns all images not in the Camera Roll.
      */
-
-    public static List<PhotoItem> getAlbumThumbnails(Context context){
+    public static List<PhotoItem> getAlbumThumbnails(Context context) {
 
         final String[] projection = {MediaStore.Images.Thumbnails.DATA, MediaStore.Images.Thumbnails.IMAGE_ID};
 
@@ -58,7 +77,7 @@ public class PhotoGalleryImageProvider {
                 Uri fullImageUri = uriToFullImage(thumbnailsCursor,context);
 
                 // Create the list item.
-                PhotoItem newItem = new PhotoItem(thumbnailUri,fullImageUri);
+                PhotoItem newItem = new PhotoItem(thumbnailUri, fullImageUri);
                 result.add(newItem);
             } while (thumbnailsCursor.moveToNext());
         }
@@ -89,8 +108,6 @@ public class PhotoGalleryImageProvider {
 
     /**
      * Render a thumbnail photo and scale it down to a smaller size.
-     * @param path
-     * @return
      */
     private static Bitmap bitmapFromPath(String path){
         File imgFile = new  File(path);
