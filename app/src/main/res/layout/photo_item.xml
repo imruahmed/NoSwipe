@@ -12,6 +12,7 @@
             android:layout_height="fill_parent"
             android:adjustViewBounds="false"
             android:gravity="center"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop"
+            android:onClick="selectImage"/>
     </FrameLayout>
 </RelativeLayout>

@@ -8,17 +8,19 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <GridView
             android:id="@+id/grid_list_view"
             android:numColumns="3"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-        <TextView
-            android:id="@+id/empty"
+
+        <Button
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:visibility="invisible"/>
+            android:layout_height="wrap_content"
+            android:text="Start Gallery"
+            android:id="@+id/startButton"
+            android:onClick="startGallery"/>
     </FrameLayout>
 
 </LinearLayout>
