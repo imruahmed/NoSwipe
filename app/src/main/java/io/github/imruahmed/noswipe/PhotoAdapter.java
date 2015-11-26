@@ -2,63 +2,65 @@ package io.github.imruahmed.noswipe;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 
-import java.util.List;
+import java.io.File;
+import java.util.ArrayList;
 
+public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
 
-public class PhotoAdapter extends ArrayAdapter<PhotoItem>{
-
-    // Ivars.
     private Context context;
-    private int resourceId;
+    private int layoutResourceId;
+    private ArrayList<PhotoItem> photoList = new ArrayList<PhotoItem>();
 
-    public PhotoAdapter(Context context, int resourceId, List<PhotoItem> items, boolean useList) {
-        super(context, resourceId, items);
+    public PhotoAdapter(Context context, int layoutResourceId, ArrayList photoList) {
+        super(context, layoutResourceId, photoList);
+        this.layoutResourceId = layoutResourceId;
         this.context = context;
-        this.resourceId = resourceId;
+        this.photoList = photoList;
     }
 
-    private class ViewHolder {
-        ImageView photoImageView;
+    public void setGridData(ArrayList<PhotoItem> photoList) {
+        this.photoList = photoList;
+        notifyDataSetChanged();
     }
 
+    @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-
         ViewHolder holder;
-        PhotoItem photoItem = getItem(position);
-        //View view;
 
-        // This block exists to inflate the photo list item conditionally based on whether
-        // we want to support a grid or list view.
-//        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-//
-//        if (convertView == null) {
-//            holder = new ViewHolder();
-//            view = inflater.inflate(resourceId, null);
-//            holder.photoImageView = (ImageView) view.findViewById(R.id.imageView);
-//            view.setTag(holder);
-//        } else {
-//            view = convertView;
-//            holder = (ViewHolder) view.getTag();
-//        }
-//
-//        // Set the thumbnail
-//        holder.photoImageView.setImageURI(photoItem.getThumbnailUri());
 
-        LayoutInflater inflater = LayoutInflater.from(getContext());
-        View view = inflater.inflate(R.layout.photo_item, parent, false);
+        if (convertView == null) {
 
-        ImageView imageView = (ImageView) view.findViewById(R.id.imageView);
-        imageView.setImageURI(photoItem.getThumbnailUri());
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(layoutResourceId, parent, false);
 
-        return view;
+            holder = new ViewHolder();
+            holder.image = (ImageView) convertView.findViewById(R.id.photoImageView);
+            convertView.setTag(holder);
+
+        } else {
+
+            holder = (ViewHolder) convertView.getTag();
+
+        }
+
+        PhotoItem item = photoList.get(position);
+        Picasso.with(context).load(new File(item.getImage())).into(holder.image);
+
+        return convertView;
+    }
+
+    static class ViewHolder {
+        ImageView image;
     }
 }

@@ -1,37 +1,37 @@
 package io.github.imruahmed.noswipe;
 
-import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
-import android.widget.ImageView;
 
 public class PhotoItem {
-
-    private Uri thumbnailUri;
+    private String image;
+    private Uri thumbnailPath;
     private Uri fullImageUri;
 
-
-
-    public PhotoItem(Uri thumbnailUri, Uri fullImageUri) {
-        this.thumbnailUri = thumbnailUri;
+    public PhotoItem(String image, Uri thumbnailPath, Uri fullImageUri) {
+        super();
+        this.image = image;
+        this.thumbnailPath = thumbnailPath;
         this.fullImageUri = fullImageUri;
     }
 
-    public PhotoItem(){};
-
-    public Uri getThumbnailUri() {
-        return thumbnailUri;
+    public String getImage() {
+        return image;
     }
 
-    public void setThumbnailUri(Uri thumbnailUri) {
-        this.thumbnailUri = thumbnailUri;
+    public void setImage(String image) {
+        this.image = image;
     }
 
-    public Uri getFullImageUri() {
-        return fullImageUri;
+    public Uri getThumbnailPath() {
+        return thumbnailPath;
     }
 
-    public void setFullImageUri(Uri fullImageUri) {
-        this.fullImageUri = fullImageUri;
+    public void setThumbnailPath(Uri thumbnailPath) {
+        this.thumbnailPath = thumbnailPath;
     }
 
+    public Uri getFullImageUri() { return fullImageUri; }
+
+    public void setFullImageUri(Uri fullImageUri) { this.fullImageUri = fullImageUri; }
 }
