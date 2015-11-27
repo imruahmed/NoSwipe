@@ -16,6 +16,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -44,13 +45,15 @@ public class DetailsActivity extends FragmentActivity {
 
         try {
             data = intent.getParcelableArrayListExtra("SELECTED");
-            Log.v("LOOL", data.toString());
         } catch (Exception e) {
         }
 
         viewPager = (ViewPager) findViewById(R.id.pager);
         pagerAdapter = new GalleryPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(pagerAdapter);
+
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
     }
 
