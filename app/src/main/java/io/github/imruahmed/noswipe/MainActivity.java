@@ -3,13 +3,11 @@ package io.github.imruahmed.noswipe;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -19,31 +17,19 @@ import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     public static Context context;
 
-    private GridView gridView;
+    private GridView gallery;
     private ProgressBar progressBar;
-    private Button swipeButton;
+    private Button noSwipeButton;
 
-    private PhotoAdapter gridAdapter;
-    public ArrayList<PhotoItem> mGridData;
-    private ArrayList<PhotoItem> selectedPhotos;
+    private PhotoAdapter photoAdapter;
+    public ArrayList<PhotoItem> allPhotoItems;
+    private ArrayList<PhotoItem> selectedPhotoItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,17 +39,18 @@ public class MainActivity extends AppCompatActivity {
         context = getBaseContext();
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        swipeButton = (Button) findViewById(R.id.swipeBtn);
-        gridView = (GridView) findViewById(R.id.gallery);
+        noSwipeButton = (Button) findViewById(R.id.noSwipeBtn);
+        gallery = (GridView) findViewById(R.id.gallery);
 
-        selectedPhotos = new ArrayList<>();
+        selectedPhotoItems = new ArrayList<>();
 
-        mGridData = new ArrayList<>();
-        gridAdapter = new PhotoAdapter(this, R.layout.gallery_item, mGridData);
-        gridView.setAdapter(gridAdapter);
-        gridView.setOnItemClickListener(gridItemClickListener);
+        allPhotoItems = new ArrayList<>();
 
-        new AsyncHttpTask().execute("DUMMY");
+        photoAdapter = new PhotoAdapter(this, R.layout.gallery_item, allPhotoItems);
+        gallery.setAdapter(photoAdapter);
+        gallery.setOnItemClickListener(gridItemClickListener);
+
+        new AsyncHttpTask().execute();
         progressBar.setVisibility(View.VISIBLE);
 
     }
@@ -76,23 +63,23 @@ public class MainActivity extends AppCompatActivity {
             Animation animation = AnimationUtils.loadAnimation(getBaseContext(), android.R.anim.fade_out);
             view.startAnimation(animation);
 
-            selectedPhotos.add(item);
+            selectedPhotoItems.add(item);
 
         }
     };
 
     public void startSwiping(View view) {
 
-        Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
-        intent.putParcelableArrayListExtra("SELECTED", selectedPhotos);
+        Intent intent = new Intent(MainActivity.this, GalleryPagerActivity.class);
+        intent.putParcelableArrayListExtra("SELECTED_PHOTOS", selectedPhotoItems);
 
         startActivity(intent);
 
-        selectedPhotos.clear();
+        selectedPhotoItems.clear();
     }
 
     //Downloading data asynchronously
-    public class AsyncHttpTask extends AsyncTask<String, Void, Integer> {
+    public class AsyncHttpTask extends AsyncTask<Void, Void, Integer> {
 
         public static final int IMAGE_RESOLUTION = 15;
 
@@ -104,8 +91,9 @@ public class MainActivity extends AppCompatActivity {
         public final String CAMERA_IMAGE_BUCKET_ID =
                 getBucketId(CAMERA_IMAGE_BUCKET_NAME);
 
+
         @Override
-        protected Integer doInBackground(String... params) {
+        protected Integer doInBackground(Void... voids) {
 
             final String[] projection = {MediaStore.Images.Thumbnails.DATA, MediaStore.Images.Thumbnails.IMAGE_ID};
 
@@ -118,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Extract the proper column thumbnails
             int thumbnailColumnIndex = thumbnailsCursor.getColumnIndex(MediaStore.Images.Thumbnails.DATA);
+
             ArrayList<PhotoItem> result = new ArrayList<PhotoItem>(thumbnailsCursor.getCount());
 
             if (thumbnailsCursor.moveToFirst()) {
@@ -125,10 +114,9 @@ public class MainActivity extends AppCompatActivity {
                     // Generate a tiny thumbnail version.
                     int thumbnailImageID = thumbnailsCursor.getInt(thumbnailColumnIndex);
                     String thumbnailPath = thumbnailsCursor.getString(thumbnailImageID);
-                    Uri thumbnailUri = Uri.parse(thumbnailPath);
-                    Uri fullImageUri = uriToFullImage(thumbnailsCursor,context);
+                    String fullImagePath = getFullImagePath(thumbnailsCursor, context);
 
-                    PhotoItem newItem = new PhotoItem(thumbnailPath, thumbnailUri, fullImageUri);
+                    PhotoItem newItem = new PhotoItem(thumbnailPath, fullImagePath);
                     result.add(newItem);
 
                 } while (thumbnailsCursor.moveToNext());
@@ -138,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
             int n = result.size();
 
             for (int i=0; i<result.size(); i++){
-                mGridData.add(result.get(n-1-i));
+                allPhotoItems.add(result.get(n - 1 - i));
             }
 
             return 1;
@@ -146,21 +134,23 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Integer result) {
-            // Download complete. Update UI
+
             if (result == 1) {
-                gridAdapter.setGridData(mGridData);
+                photoAdapter.setGridData(allPhotoItems);
             } else {
                 Toast.makeText(MainActivity.this, "Failed to fetch data!", Toast.LENGTH_SHORT).show();
             }
             progressBar.setVisibility(View.GONE);
+
         }
     }
 
-    private static Uri uriToFullImage(Cursor thumbnailsCursor, Context context){
+    private static String getFullImagePath(Cursor thumbnailsCursor, Context context){
+
         String imageId = thumbnailsCursor.getString(
                 thumbnailsCursor.getColumnIndex(MediaStore.Images.Thumbnails.IMAGE_ID));
 
-        // Request image related to this thumbnail
+        // Request imageView related to this thumbnail
         String[] filePathColumn = { MediaStore.Images.Media.DATA };
         Cursor imagesCursor = context.getContentResolver().query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -172,10 +162,10 @@ public class MainActivity extends AppCompatActivity {
             int columnIndex = imagesCursor.getColumnIndex(filePathColumn[0]);
             String filePath = imagesCursor.getString(columnIndex);
             imagesCursor.close();
-            return Uri.parse(filePath);
+            return filePath;
         } else {
             imagesCursor.close();
-            return Uri.parse("");
+            return "";
         }
     }
 
