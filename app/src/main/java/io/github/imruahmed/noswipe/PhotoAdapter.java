@@ -45,7 +45,7 @@ public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
             convertView = inflater.inflate(layoutResourceId, parent, false);
 
             holder = new ViewHolder();
-            holder.image = (ImageView) convertView.findViewById(R.id.photoImageView);
+            holder.image = (ImageView) convertView.findViewById(R.id.imageView);
             convertView.setTag(holder);
 
         } else {

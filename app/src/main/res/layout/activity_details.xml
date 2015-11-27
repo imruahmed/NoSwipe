@@ -5,20 +5,9 @@
     android:orientation="vertical"
     android:background="#000">
 
-    <ImageView
-        android:id="@+id/image"
+    <android.support.v4.view.ViewPager
+        android:id="@+id/pager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:scaleType="fitCenter" />
-
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="#00000c"
-        android:padding="10dp"
-        android:textColor="#fff"
-        android:textSize="20dp" />
+        android:layout_height="match_parent">
+    </android.support.v4.view.ViewPager>
 </FrameLayout>

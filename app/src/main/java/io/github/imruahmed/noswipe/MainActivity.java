@@ -11,7 +11,10 @@ import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -36,9 +39,11 @@ public class MainActivity extends AppCompatActivity {
 
     private GridView gridView;
     private ProgressBar progressBar;
+    private Button swipeButton;
 
     private PhotoAdapter gridAdapter;
     public ArrayList<PhotoItem> mGridData;
+    private ArrayList<PhotoItem> selectedPhotos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +53,10 @@ public class MainActivity extends AppCompatActivity {
         context = getBaseContext();
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        swipeButton = (Button) findViewById(R.id.swipeBtn);
         gridView = (GridView) findViewById(R.id.gallery);
+
+        selectedPhotos = new ArrayList<>();
 
         mGridData = new ArrayList<>();
         gridAdapter = new PhotoAdapter(this, R.layout.gallery_item, mGridData);
@@ -65,15 +73,23 @@ public class MainActivity extends AppCompatActivity {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             PhotoItem item = (PhotoItem) parent.getItemAtPosition(position);
 
-            //Create intent
-            Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
-            intent.putExtra("IMAGE_PATH", item.getImage());
+            Animation animation = AnimationUtils.loadAnimation(getBaseContext(), android.R.anim.fade_out);
+            view.startAnimation(animation);
 
-            //Start details activity
-            startActivity(intent);
+            selectedPhotos.add(item);
+
         }
     };
 
+    public void startSwiping(View view) {
+
+        Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
+        intent.putParcelableArrayListExtra("SELECTED", selectedPhotos);
+
+        startActivity(intent);
+
+        selectedPhotos.clear();
+    }
 
     //Downloading data asynchronously
     public class AsyncHttpTask extends AsyncTask<String, Void, Integer> {
