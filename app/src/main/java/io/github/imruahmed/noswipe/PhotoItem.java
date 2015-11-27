@@ -3,15 +3,17 @@ package io.github.imruahmed.noswipe;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class PhotoItem implements Parcelable{
+public class PhotoItem implements Parcelable, Comparable<PhotoItem>{
 
     private String thumbnailPath;
     private String fullImagePath;
+    private int order;
 
-    public PhotoItem(String thumbnailPath, String fullImageUri) {
+    public PhotoItem(String thumbnailPath, String fullImageUri, int order) {
         super();
         this.thumbnailPath = thumbnailPath;
         this.fullImagePath = fullImageUri;
+        this.order = order;
     }
 
     public PhotoItem(Parcel source){
@@ -19,18 +21,6 @@ public class PhotoItem implements Parcelable{
         thumbnailPath = source.readString();
         fullImagePath = source.readString();
     }
-
-    public String getThumbnailPath() {
-        return thumbnailPath;
-    }
-
-    public void setThumbnailPath(String thumbnailPath) {
-        this.thumbnailPath = thumbnailPath;
-    }
-
-    public String getFullImagePath() { return fullImagePath; }
-
-    public void setFullImagePath(String fullImagePath) { this.fullImagePath = fullImagePath; }
 
     @Override
     public int describeContents() {
@@ -45,6 +35,27 @@ public class PhotoItem implements Parcelable{
 
     }
 
+    @Override
+    public int compareTo(PhotoItem photoItem) {
+        return photoItem.getOrder()-order;
+    }
+
+    public String getThumbnailPath() {
+        return thumbnailPath;
+    }
+
+    public void setThumbnailPath(String thumbnailPath) {
+        this.thumbnailPath = thumbnailPath;
+    }
+
+    public String getFullImagePath() { return fullImagePath; }
+
+    public void setFullImagePath(String fullImagePath) { this.fullImagePath = fullImagePath; }
+
+    public int getOrder() { return order; }
+
+
+
     public static final Parcelable.Creator<PhotoItem> CREATOR = new Parcelable.Creator<PhotoItem>() {
         public PhotoItem createFromParcel(Parcel in) {
             return new PhotoItem(in);
@@ -54,4 +65,6 @@ public class PhotoItem implements Parcelable{
             return new PhotoItem[size];
         }
     };
+
+
 }

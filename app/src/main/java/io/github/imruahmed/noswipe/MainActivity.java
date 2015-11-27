@@ -1,7 +1,9 @@
 package io.github.imruahmed.noswipe;
 
+import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,6 +20,8 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,14 +47,13 @@ public class MainActivity extends AppCompatActivity {
         gallery = (GridView) findViewById(R.id.gallery);
 
         selectedPhotoItems = new ArrayList<>();
-
         allPhotoItems = new ArrayList<>();
 
         photoAdapter = new PhotoAdapter(this, R.layout.gallery_item, allPhotoItems);
         gallery.setAdapter(photoAdapter);
         gallery.setOnItemClickListener(gridItemClickListener);
 
-        new AsyncHttpTask().execute();
+        getLoaderManager().initLoader(R.id.loader_id, null, loaderCallbacks);
         progressBar.setVisibility(View.VISIBLE);
 
     }
@@ -71,6 +74,9 @@ public class MainActivity extends AppCompatActivity {
     public void startSwiping(View view) {
 
         Intent intent = new Intent(MainActivity.this, GalleryPagerActivity.class);
+
+        Collections.sort(selectedPhotoItems);
+
         intent.putParcelableArrayListExtra("SELECTED_PHOTOS", selectedPhotoItems);
 
         startActivity(intent);
@@ -78,98 +84,36 @@ public class MainActivity extends AppCompatActivity {
         selectedPhotoItems.clear();
     }
 
-    //Downloading data asynchronously
-    public class AsyncHttpTask extends AsyncTask<Void, Void, Integer> {
+    private void updateAllPhotoItems (ArrayList<PhotoItem> photoItems) {
 
-        public static final int IMAGE_RESOLUTION = 15;
+        allPhotoItems.clear();
 
-        // Buckets where we are fetching images from.
-        public final String CAMERA_IMAGE_BUCKET_NAME =
-                Environment.getExternalStorageDirectory().getAbsolutePath().toString()
-                        + "/DCIM/.thumbnails";
-
-        public final String CAMERA_IMAGE_BUCKET_ID =
-                getBucketId(CAMERA_IMAGE_BUCKET_NAME);
-
-
-        @Override
-        protected Integer doInBackground(Void... voids) {
-
-            final String[] projection = {MediaStore.Images.Thumbnails.DATA, MediaStore.Images.Thumbnails.IMAGE_ID};
-
-            Cursor thumbnailsCursor = context.getContentResolver().query(
-                    MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
-                    projection, // Which columns to return
-                    null,       // Return all rows
-                    null,
-                    MediaStore.Images.Thumbnails.DEFAULT_SORT_ORDER);
-
-            // Extract the proper column thumbnails
-            int thumbnailColumnIndex = thumbnailsCursor.getColumnIndex(MediaStore.Images.Thumbnails.DATA);
-
-            ArrayList<PhotoItem> result = new ArrayList<PhotoItem>(thumbnailsCursor.getCount());
-
-            if (thumbnailsCursor.moveToFirst()) {
-                do {
-                    // Generate a tiny thumbnail version.
-                    int thumbnailImageID = thumbnailsCursor.getInt(thumbnailColumnIndex);
-                    String thumbnailPath = thumbnailsCursor.getString(thumbnailImageID);
-                    String fullImagePath = getFullImagePath(thumbnailsCursor, context);
-
-                    PhotoItem newItem = new PhotoItem(thumbnailPath, fullImagePath);
-                    result.add(newItem);
-
-                } while (thumbnailsCursor.moveToNext());
-            }
-            thumbnailsCursor.close();
-
-            int n = result.size();
-
-            for (int i=0; i<result.size(); i++){
-                allPhotoItems.add(result.get(n - 1 - i));
-            }
-
-            return 1;
+        for(int i = 0; i < photoItems.size(); i++){
+            PhotoItem item = photoItems.get(i);
+            allPhotoItems.add(item);
         }
 
-        @Override
-        protected void onPostExecute(Integer result) {
+        photoAdapter.setGridData(allPhotoItems);
 
-            if (result == 1) {
-                photoAdapter.setGridData(allPhotoItems);
-            } else {
-                Toast.makeText(MainActivity.this, "Failed to fetch data!", Toast.LENGTH_SHORT).show();
-            }
-            progressBar.setVisibility(View.GONE);
-
-        }
     }
 
-    private static String getFullImagePath(Cursor thumbnailsCursor, Context context){
+    private LoaderManager.LoaderCallbacks<ArrayList<PhotoItem>> loaderCallbacks =
+            new LoaderManager.LoaderCallbacks<ArrayList<PhotoItem>>() {
 
-        String imageId = thumbnailsCursor.getString(
-                thumbnailsCursor.getColumnIndex(MediaStore.Images.Thumbnails.IMAGE_ID));
+                @Override
+                public Loader<ArrayList<PhotoItem>> onCreateLoader(int i, Bundle bundle) {
+                    return new PhotoImageLoader(context);
+                }
 
-        // Request imageView related to this thumbnail
-        String[] filePathColumn = { MediaStore.Images.Media.DATA };
-        Cursor imagesCursor = context.getContentResolver().query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                filePathColumn,
-                MediaStore.Images.Media._ID + "=?",
-                new String[]{imageId}, null);
+                @Override
+                public void onLoadFinished(Loader<ArrayList<PhotoItem>> loader, ArrayList<PhotoItem> photoItems) {
 
-        if (imagesCursor != null && imagesCursor.moveToFirst()) {
-            int columnIndex = imagesCursor.getColumnIndex(filePathColumn[0]);
-            String filePath = imagesCursor.getString(columnIndex);
-            imagesCursor.close();
-            return filePath;
-        } else {
-            imagesCursor.close();
-            return "";
-        }
-    }
+                    updateAllPhotoItems(photoItems);
+                    progressBar.setVisibility(View.GONE);
 
-    public static String getBucketId(String path) {
-        return String.valueOf(path.toLowerCase().hashCode());
-    }
+                }
+
+                @Override
+                public void onLoaderReset(Loader<ArrayList<PhotoItem>> loader) { }
+            };
 }
