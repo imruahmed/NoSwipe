@@ -1,12 +1,20 @@
 package io.github.imruahmed.noswipe;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
+import com.nostra13.universalimageloader.core.display.RoundedVignetteBitmapDisplayer;
+import com.nostra13.universalimageloader.core.process.BitmapProcessor;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -20,9 +28,22 @@ public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
 
     public PhotoAdapter(Context context, int layoutResourceId, ArrayList allPhotos) {
         super(context, layoutResourceId, allPhotos);
+
         this.layoutResourceId = layoutResourceId;
         this.context = context;
         this.allPhotos = allPhotos;
+
+        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
+                .bitmapConfig(Bitmap.Config.RGB_565)
+                .cacheOnDisk(true)
+                .build();
+
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context)
+                .defaultDisplayImageOptions(defaultOptions)
+                .build();
+
+        ImageLoader.getInstance().init(config);
+
     }
 
     public void setGridData(ArrayList<PhotoItem> allPhotos) {
@@ -45,13 +66,11 @@ public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
             convertView.setTag(viewHolder);
 
         } else {
-
             viewHolder = (ViewHolder) convertView.getTag();
-
         }
 
         PhotoItem item = allPhotos.get(position);
-        Picasso.with(context).load(new File(item.getThumbnailPath())).into(viewHolder.getImageView());
+        ImageLoader.getInstance().displayImage(item.getThumbnailPath(), viewHolder.getImageView());
 
         return convertView;
     }

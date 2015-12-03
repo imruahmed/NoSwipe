@@ -4,10 +4,9 @@
 
     <GridView
         android:id="@+id/gallery"
-        android:numColumns="3"
+        android:numColumns="5"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alwaysDrawnWithCache="true"/>
+        android:layout_height="match_parent" />
 
     <ProgressBar
         android:id="@+id/progressBar"

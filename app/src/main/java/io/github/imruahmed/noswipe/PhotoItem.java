@@ -3,17 +3,21 @@ package io.github.imruahmed.noswipe;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.File;
+
 public class PhotoItem implements Parcelable, Comparable<PhotoItem>{
 
     private String thumbnailPath;
     private String fullImagePath;
     private int order;
+    public boolean isSelected;
 
-    public PhotoItem(String thumbnailPath, String fullImageUri, int order) {
+    public PhotoItem(String thumbnailPath, String fullImagePath, int order) {
         super();
         this.thumbnailPath = thumbnailPath;
-        this.fullImagePath = fullImageUri;
+        this.fullImagePath = fullImagePath;
         this.order = order;
+        isSelected = false;
     }
 
     public PhotoItem(Parcel source){
@@ -37,7 +41,7 @@ public class PhotoItem implements Parcelable, Comparable<PhotoItem>{
 
     @Override
     public int compareTo(PhotoItem photoItem) {
-        return photoItem.getOrder()-order;
+        return photoItem.getOrder()-getOrder();
     }
 
     public String getThumbnailPath() {
@@ -53,8 +57,6 @@ public class PhotoItem implements Parcelable, Comparable<PhotoItem>{
     public void setFullImagePath(String fullImagePath) { this.fullImagePath = fullImagePath; }
 
     public int getOrder() { return order; }
-
-
 
     public static final Parcelable.Creator<PhotoItem> CREATOR = new Parcelable.Creator<PhotoItem>() {
         public PhotoItem createFromParcel(Parcel in) {

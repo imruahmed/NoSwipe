@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.WindowManager;
 
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ public class GalleryPagerActivity extends FragmentActivity {
             selectedPhotoItems = intent.getParcelableArrayListExtra("SELECTED_PHOTOS");
         } catch (Exception e) {
         }
+
+        Log.v("LOOK HERE", selectedPhotoItems.toString());
 
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         pagerAdapter = new GalleryPagerAdapter(getSupportFragmentManager());

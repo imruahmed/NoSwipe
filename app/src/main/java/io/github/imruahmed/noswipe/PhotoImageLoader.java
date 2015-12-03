@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class PhotoImageLoader extends AsyncTaskLoader<ArrayList<PhotoItem>> {
     public static final String CAMERA_IMAGE_BUCKET_NAME = Environment
             .getExternalStorageDirectory()
             .getAbsolutePath()
-            .toString() + "/DCIM/.thumbnails";
+            .toString() + "/DCIM/Camera";
 
     public static final String CAMERA_IMAGE_BUCKET_ID =
             getBucketId(CAMERA_IMAGE_BUCKET_NAME);
@@ -62,6 +63,7 @@ public class PhotoImageLoader extends AsyncTaskLoader<ArrayList<PhotoItem>> {
 
     public static ArrayList<PhotoItem> getAlbumThumbnails(Context context) {
 
+
         final String[] projection = {MediaStore.Images.Thumbnails.DATA, MediaStore.Images.Thumbnails.IMAGE_ID};
 
         Cursor thumbnailsCursor = context.getContentResolver().query(
@@ -80,8 +82,8 @@ public class PhotoImageLoader extends AsyncTaskLoader<ArrayList<PhotoItem>> {
         if (thumbnailsCursor.moveToFirst()) {
             do {
                 int thumbnailImageID = thumbnailsCursor.getInt(thumbnailColumnIndex);
-                String thumbnailPath = thumbnailsCursor.getString(thumbnailImageID);
-                String fullImagePath = getFullImagePath(thumbnailsCursor, context);
+                String thumbnailPath = "file://"+thumbnailsCursor.getString(thumbnailImageID);
+                String fullImagePath = "file://"+getFullImagePath(thumbnailsCursor, context);
 
                 PhotoItem newItem = new PhotoItem(thumbnailPath, fullImagePath, index);
                 result.add(newItem);
