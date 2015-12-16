@@ -1,11 +1,16 @@
 package io.github.imruahmed.noswipe;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.KeyguardManager;
 import android.app.LoaderManager;
+import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -76,27 +81,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             PhotoItem item = (PhotoItem) parent.getItemAtPosition(position);
-
-//            if (!multiSelectOn) {
-//                selectedPhotoItems.add(item);
-//                startSwiping(view);
-//            } else {
-//                if (selectedPhotoItems.contains(item)) {
-//                    selectedPhotoItems.remove(item);
-//                    views.remove(view);
-//                    view.setScaleX(1f);
-//                    view.setScaleY(1f);
-//
-//                } else {
-//                    selectedPhotoItems.add(item);
-//                    views.add(view);
-//                    view.setScaleX(0.8f);
-//                    view.setScaleY(0.8f);
-//                }
-//                if (selectedPhotoItems.isEmpty()) {
-//                    multiSelectOn = false;
-//                }
-//            }
+            selectedPhotoItems.add(item);
+            startSwiping(view);
         }
     };
 
@@ -105,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
         public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
             PhotoItem item = (PhotoItem) adapterView.getItemAtPosition(i);
 
+            selectedPhotoItems.add(item);
+            Toast.makeText(context, "Selected: "+selectedPhotoItems.size(), Toast.LENGTH_SHORT).show();
 //            if (!multiSelectOn) {
 //                multiSelectOn = true;
 //                selectedPhotoItems.add(item);
@@ -127,9 +115,11 @@ public class MainActivity extends AppCompatActivity {
 //                }
 //            }
 //            return true;
+            return true;
         }
     };
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void startSwiping(View view) {
 
         if (selectedPhotoItems.isEmpty()){
@@ -142,6 +132,9 @@ public class MainActivity extends AppCompatActivity {
 
             Intent intent = new Intent(MainActivity.this, GalleryPagerActivity.class);
             intent.putParcelableArrayListExtra("SELECTED_PHOTOS", selectedPhotoItems);
+
+            startLockTask();
+
             startActivity(intent);
 
             selectedPhotoItems.clear();
@@ -153,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
             views.clear();
 
         }
-
     }
 
     private void updateAllPhotoItems (ArrayList<PhotoItem> photoItems) {
