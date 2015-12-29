@@ -6,4 +6,3 @@ Slogan ideas
 
 Swiper, no swiping
 
-Protecting the 'u' in 'nudes'
