@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -37,12 +38,16 @@ public class GalleryPagerActivity extends FragmentActivity {
 
         Intent intent = getIntent();
 
+        KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
+        KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
+        lock.reenableKeyguard();
+
         try {
             selectedPhotoItems = intent.getParcelableArrayListExtra("SELECTED_PHOTOS");
         } catch (Exception e) {
         }
 
-        Log.v("LOOK HERE", selectedPhotoItems.toString());
+
 
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         pagerAdapter = new GalleryPagerAdapter(getSupportFragmentManager());
@@ -53,21 +58,26 @@ public class GalleryPagerActivity extends FragmentActivity {
 
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onBackPressed() { }
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
 
-//    @Override
-//    public boolean onKeyDown(int keyCode, KeyEvent event) {
-//
-//        if(keyCode == KeyEvent.KEYCODE_BACK) {
-//            KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
-//            Intent i = km.createConfirmDeviceCredentialIntent("No Swipe!", "");
-//
-//            startActivityForResult(i, 10);
-//            return true;
-//        }
-//        return super.onKeyDown(keyCode, event);
-//    }
+        if(keyCode == KeyEvent.KEYCODE_BACK) {
+            KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+            Intent i = km.createConfirmDeviceCredentialIntent("No Swipe!", "");
+
+            startActivityForResult(i, 10);
+            return false;
+        }
+        if(keyCode == KeyEvent.KEYCODE_APP_SWITCH) {
+            KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+            Intent i = km.createConfirmDeviceCredentialIntent("No Swipe!", "");
+
+            startActivityForResult(i, 10);
+            return false;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

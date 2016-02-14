@@ -15,7 +15,6 @@ import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.RoundedVignetteBitmapDisplayer;
 import com.nostra13.universalimageloader.core.process.BitmapProcessor;
-import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,14 +23,14 @@ public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
 
     private Context context;
     private int layoutResourceId;
-    private ArrayList<PhotoItem> allPhotos = new ArrayList<PhotoItem>();
+    ArrayList<PhotoItem> allPhotoItems;
 
-    public PhotoAdapter(Context context, int layoutResourceId, ArrayList allPhotos) {
-        super(context, layoutResourceId, allPhotos);
+    public PhotoAdapter(Context context, int layoutResourceId, ArrayList<PhotoItem> items) {
+        super(context, layoutResourceId);
 
         this.layoutResourceId = layoutResourceId;
         this.context = context;
-        this.allPhotos = allPhotos;
+        this.allPhotoItems = items;
 
         DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
                 .bitmapConfig(Bitmap.Config.RGB_565)
@@ -46,8 +45,11 @@ public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
 
     }
 
-    public void setGridData(ArrayList<PhotoItem> allPhotos) {
-        this.allPhotos = allPhotos;
+    public void setGridData(ArrayList<PhotoItem> items) {
+        allPhotoItems.clear();
+        for(int i=0; i<items.size(); i++) {
+            allPhotoItems.add(items.get(i));
+        }
         notifyDataSetChanged();
     }
 
@@ -69,7 +71,7 @@ public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        PhotoItem item = allPhotos.get(position);
+        PhotoItem item = getItem(position);
         ImageLoader.getInstance().displayImage(item.getThumbnailPath(), viewHolder.getImageView());
 
         return convertView;

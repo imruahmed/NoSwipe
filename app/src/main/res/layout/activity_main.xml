@@ -2,11 +2,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <Button
+        android:id="@+id/noSwipeBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start Swiping!"
+        android:onClick="startSwiping" />
+
     <GridView
         android:id="@+id/gallery"
         android:numColumns="3"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@id/noSwipeBtn"
         android:alwaysDrawnWithCache="true"/>
 
     <ProgressBar
@@ -16,11 +24,6 @@
         android:layout_centerInParent="true"
         android:visibility="gone" />
 
-    <Button
-        android:id="@+id/noSwipeBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Swiping!"
-        android:onClick="startSwiping" />
+
 
 </RelativeLayout>
